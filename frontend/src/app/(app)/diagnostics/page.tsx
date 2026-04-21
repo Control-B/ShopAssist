@@ -1,10 +1,13 @@
-import { SectionPlaceholder } from "@/components/layout/section-placeholder";
+import { DiagnosticsDashboard } from "@/components/diagnostics/diagnostics-dashboard";
 
-export default function DiagnosticsPage() {
-  return (
-    <SectionPlaceholder
-      title="Logs & Diagnostics"
-      description="Webhook events, sync history, integration errors, and session metadata will surface here once the service layer is wired in."
-    />
-  );
+type DiagnosticsPageProps = {
+  searchParams?: Promise<{
+    shop?: string;
+  }>;
+};
+
+export default async function DiagnosticsPage({ searchParams }: DiagnosticsPageProps) {
+  const resolvedSearchParams = await searchParams;
+
+  return <DiagnosticsDashboard initialShop={resolvedSearchParams?.shop ?? ""} />;
 }

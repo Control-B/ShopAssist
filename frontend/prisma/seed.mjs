@@ -47,6 +47,8 @@ async function main() {
     update: {},
     create: {
       shopId: shop.id,
+      externalClientId: process.env.DEV_OMNIWEB_CLIENT_ID ?? null,
+      apiBaseUrl: process.env.OMNIWEB_ENGINE_URL ?? null,
     },
   });
 

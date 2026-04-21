@@ -151,6 +151,8 @@ model ExternalAIConnection {
   shopId                  String           @unique
   apiBaseUrl              String?
   apiKeyEncrypted         String?          @db.Text
+  externalClientId        String?
+  clerkUserId            String?
   livekitAgentName        String?
   livekitDispatchRuleName String?
   connectionStatus        ConnectionStatus @default(DISCONNECTED)

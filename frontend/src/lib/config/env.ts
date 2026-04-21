@@ -2,6 +2,18 @@ import "server-only";
 
 import { z } from "zod";
 
+const optionalUrlSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") {
+      return value;
+    }
+
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  },
+  z.string().url().optional(),
+);
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   APP_URL: z.string().url(),
@@ -14,6 +26,7 @@ const envSchema = z.object({
     .string()
     .min(32, "ENCRYPTION_KEY should be at least 32 characters."),
   EXTERNAL_AI_SHARED_SECRET: z.string().min(1),
+  OMNIWEB_ENGINE_URL: optionalUrlSchema,
 });
 
 const parsedEnv = envSchema.safeParse({
@@ -26,6 +39,7 @@ const parsedEnv = envSchema.safeParse({
   SHOPIFY_WEBHOOK_SECRET: process.env.SHOPIFY_WEBHOOK_SECRET,
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   EXTERNAL_AI_SHARED_SECRET: process.env.EXTERNAL_AI_SHARED_SECRET,
+  OMNIWEB_ENGINE_URL: process.env.OMNIWEB_ENGINE_URL,
 });
 
 if (!parsedEnv.success) {

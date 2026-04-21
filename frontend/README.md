@@ -2,7 +2,11 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+First, copy `.env.example` to `.env.local` and fill in Shopify + database values.
+
+If you already run the Omniweb AI Engine, also set `OMNIWEB_ENGINE_URL` so the Connection page can prefill the engine base URL.
+
+Then run the development server:
 
 ```bash
 npm run dev

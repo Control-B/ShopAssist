@@ -1,10 +1,13 @@
-import { SectionPlaceholder } from "@/components/layout/section-placeholder";
+import { ConnectionDashboard } from "@/components/connection/connection-dashboard";
 
-export default function ConnectionPage() {
-  return (
-    <SectionPlaceholder
-      title="External AI Connection"
-      description="This page will hold the secure API connection to the external AI backend, including LiveKit-oriented identifiers and health checks."
-    />
-  );
+type ConnectionPageProps = {
+  searchParams?: Promise<{
+    shop?: string;
+  }>;
+};
+
+export default async function ConnectionPage({ searchParams }: ConnectionPageProps) {
+  const resolvedSearchParams = await searchParams;
+
+  return <ConnectionDashboard initialShop={resolvedSearchParams?.shop ?? ""} />;
 }
