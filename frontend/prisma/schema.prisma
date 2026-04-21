@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AssistantMode {
+  CUSTOMER_SUPPORT
+  SALES_ASSISTANT
+  LEAD_QUALIFICATION
+  HYBRID
+}
+
+enum AssistantStatus {
+  DRAFT
+  READY
+  PAUSED
+  ERROR
+}
+
+enum SyncStatus {
+  IDLE
+  PENDING
+  SYNCING
+  SYNCED
+  FAILED
+}
+
+enum ConnectionStatus {
+  DISCONNECTED
+  CONNECTING
+  CONNECTED
+  DEGRADED
+  ERROR
+}
+
+enum ChannelType {
+  CHAT
+  VOICE
+  EMAIL
+  SMS
+  UNKNOWN
+}
+
+enum ConversationStatus {
+  OPEN
+  CLOSED
+  ESCALATED
+  FAILED
+}
+
+enum ConversationOutcome {
+  UNKNOWN
+  RESOLVED
+  LEAD_CAPTURED
+  SALE_COMPLETED
+  ESCALATED
+  ABANDONED
+}
+
+enum BillingStatus {
+  INACTIVE
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+enum WidgetPosition {
+  BOTTOM_RIGHT
+  BOTTOM_LEFT
+  INLINE
+}
+
+model Shop {
+  id                   String                    @id @default(cuid())
+  shopDomain           String                    @unique
+  shopName             String?
+  email                String?
+  currency             String?
+  timezone             String?
+  planName             String?
+  isActive             Boolean                   @default(true)
+  externalMerchantId   String?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  lastSyncAt           DateTime?
+  assistantSettings    AssistantSettings?
+  productSyncConfig    ProductSyncConfig?
+  externalAIConnection ExternalAIConnection?
+  billingPlan          BillingPlan?
+  conversations        ConversationLogMetadata[]
+  webhookEvents        WebhookEventLog[]
+
+  @@index([isActive])
+}
+
+model AssistantSettings {
+  id                           String          @id @default(cuid())
+  shopId                       String          @unique
+  enabled                      Boolean         @default(false)
+  assistantMode                AssistantMode   @default(HYBRID)
+  assistantName                String          @default("Omniweb AI")
+  welcomeMessage               String?         @db.Text
+  brandTone                    String?
+  businessSummary              String?         @db.Text
+  primaryGoal                  String?         @db.Text
+  supportEnabled               Boolean         @default(true)
+  salesEnabled                 Boolean         @default(true)
+  leadCaptureEnabled           Boolean         @default(true)
+  voiceEnabled                 Boolean         @default(false)
+  chatEnabled                  Boolean         @default(true)
+  productRecommendationEnabled Boolean         @default(true)
+  escalationEnabled            Boolean         @default(true)
+  handoffEmail                 String?
+  handoffPhone                 String?
+  customPrompt                 String?         @db.Text
+  systemInstructions           String?         @db.Text
+  widgetColor                  String          @default("#111827")
+  widgetPosition               WidgetPosition  @default(BOTTOM_RIGHT)
+  widgetLauncherText           String          @default("Chat with Omniweb AI")
+  status                       AssistantStatus @default(DRAFT)
+  createdAt                    DateTime        @default(now())
+  updatedAt                    DateTime        @updatedAt
+  shop                         Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+
+model ProductSyncConfig {
+  id                 String     @id @default(cuid())
+  shopId             String     @unique
+  syncEnabled        Boolean    @default(true)
+  includeProducts    Boolean    @default(true)
+  includeCollections Boolean    @default(true)
+  includeInventory   Boolean    @default(true)
+  includePricing     Boolean    @default(true)
+  includeDescriptions Boolean   @default(true)
+  includeTags        Boolean    @default(true)
+  includeImages      Boolean    @default(true)
+  syncStatus         SyncStatus @default(IDLE)
+  lastProductSyncAt  DateTime?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+  shop               Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+
+model ExternalAIConnection {
+  id                      String           @id @default(cuid())
+  shopId                  String           @unique
+  apiBaseUrl              String?
+  apiKeyEncrypted         String?          @db.Text
+  livekitAgentName        String?
+  livekitDispatchRuleName String?
+  connectionStatus        ConnectionStatus @default(DISCONNECTED)
+  lastHealthCheckAt       DateTime?
+  lastError               String?          @db.Text
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  shop                    Shop             @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+
+model ConversationLogMetadata {
+  id                     String              @id @default(cuid())
+  shopId                 String
+  externalConversationId String
+  channelType            ChannelType         @default(UNKNOWN)
+  customerIdentifier     String?
+  sessionStartedAt       DateTime?
+  sessionEndedAt         DateTime?
+  status                 ConversationStatus  @default(OPEN)
+  outcome                ConversationOutcome @default(UNKNOWN)
+  escalationTriggered    Boolean             @default(false)
+  notes                  String?             @db.Text
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  shop                   Shop                @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, externalConversationId])
+  @@index([status])
+}
+
+model BillingPlan {
+  id            String        @id @default(cuid())
+  shopId        String        @unique
+  planName      String        @default("Starter")
+  monthlyPrice  Decimal?      @db.Decimal(10, 2)
+  usageTier     String?
+  billingStatus BillingStatus @default(INACTIVE)
+  trialEndsAt   DateTime?
+  renewalDate   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  shop          Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+
+model WebhookEventLog {
+  id             String   @id @default(cuid())
+  shopId         String
+  topic          String
+  payloadSummary String?  @db.Text
+  processed      Boolean  @default(false)
+  processedAt    DateTime?
+  errorMessage   String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  shop           Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([topic])
+  @@index([processed])
+}
+
+model Session {
+  id                  String   @id
+  shop                String
+  state               String
+  isOnline            Boolean  @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean?
+  locale              String?
+  collaborator        Boolean?
+  emailVerified       Boolean?
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+
+  @@index([shop])
+}
