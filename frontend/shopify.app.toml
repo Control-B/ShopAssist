@@ -1,0 +1,18 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "6764d498421d1bfabe364016fb0bfbef"
+name = "ShopAssist"
+application_url = "https://shop.omniweb.ai"
+embedded = true
+
+[webhooks]
+api_version = "2026-04"
+
+[access_scopes]
+# Keep scopes minimal and aligned with the Shopify-side connector role.
+scopes = "read_products,read_collections,read_inventory,read_orders"
+optional_scopes = []
+use_legacy_install_flow = false
+
+[auth]
+redirect_urls = ["https://shop.omniweb.ai/api/shopify/callback"]
